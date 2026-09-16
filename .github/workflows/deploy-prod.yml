@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: 3. Replace ${{...}} Placeholders in prod/ Manifests
+      - name: 3. Replace Environment Placeholders in prod/ Manifests
         env:
           PROD_PLATFORMDATABASE_CONNECTIONSTRING: ${{ vars.PROD_PLATFORMDATABASE_CONNECTIONSTRING }}
           PROD_APPLICATIONDATABASE_CONNECTIONSTRING: ${{ vars.PROD_APPLICATIONDATABASE_CONNECTIONSTRING }}
@@ -38,12 +38,15 @@ jobs:
           python3 - << 'EOF'
           import os, base64
 
+          P = "${" + "{"
+          S = "}}"
+
           replacements = {
-              "${{Prod_PlatformDatabase__ConnectionString}}": os.environ.get("PROD_PLATFORMDATABASE_CONNECTIONSTRING", ""),
-              "${{Prod_ApplicationDatabase__ConnectionString}}": os.environ.get("PROD_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
-              "${{Prod_AdminDatabase__ConnectionString}}": os.environ.get("PROD_ADMINDATABASE_CONNECTIONSTRING", ""),
-              "${{Prod_Jwt__SigningKey}}": os.environ.get("PROD_JWT_SIGNINGKEY", ""),
-              "${{Prod_Admin_Jwt__SigningKey}}": os.environ.get("PROD_ADMIN_JWT_SIGNINGKEY", ""),
+              f"{P}Prod_PlatformDatabase__ConnectionString{S}": os.environ.get("PROD_PLATFORMDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Prod_ApplicationDatabase__ConnectionString{S}": os.environ.get("PROD_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Prod_AdminDatabase__ConnectionString{S}": os.environ.get("PROD_ADMINDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Prod_Jwt__SigningKey{S}": os.environ.get("PROD_JWT_SIGNINGKEY", ""),
+              f"{P}Prod_Admin_Jwt__SigningKey{S}": os.environ.get("PROD_ADMIN_JWT_SIGNINGKEY", ""),
           }
 
           # Scan all yaml/yml files in prod directory

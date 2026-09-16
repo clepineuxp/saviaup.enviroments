@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - dev
-      - main
     paths:
       - 'dev/**'
       - '.github/workflows/deploy-dev.yml'
@@ -25,7 +24,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: 3. Replace ${{...}} Placeholders in dev/ Manifests
+      - name: 3. Replace Environment Placeholders in dev/ Manifests
         env:
           DEV_PLATFORMDATABASE_CONNECTIONSTRING: ${{ vars.DEV_PLATFORMDATABASE_CONNECTIONSTRING }}
           DEV_APPLICATIONDATABASE_CONNECTIONSTRING: ${{ vars.DEV_APPLICATIONDATABASE_CONNECTIONSTRING }}
@@ -38,12 +37,15 @@ jobs:
           python3 - << 'EOF'
           import os, base64
 
+          P = "${" + "{"
+          S = "}}"
+
           replacements = {
-              "${{Dev_PlatformDatabase__ConnectionString}}": os.environ.get("DEV_PLATFORMDATABASE_CONNECTIONSTRING", ""),
-              "${{Dev_ApplicationDatabase__ConnectionString}}": os.environ.get("DEV_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
-              "${{Dev_AdminDatabase__ConnectionString}}": os.environ.get("DEV_ADMINDATABASE_CONNECTIONSTRING", ""),
-              "${{Dev_Jwt__SigningKey}}": os.environ.get("DEV_JWT_SIGNINGKEY", ""),
-              "${{Dev_Admin_Jwt__SigningKey}}": os.environ.get("DEV_ADMIN_JWT_SIGNINGKEY", ""),
+              f"{P}Dev_PlatformDatabase__ConnectionString{S}": os.environ.get("DEV_PLATFORMDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Dev_ApplicationDatabase__ConnectionString{S}": os.environ.get("DEV_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Dev_AdminDatabase__ConnectionString{S}": os.environ.get("DEV_ADMINDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Dev_Jwt__SigningKey{S}": os.environ.get("DEV_JWT_SIGNINGKEY", ""),
+              f"{P}Dev_Admin_Jwt__SigningKey{S}": os.environ.get("DEV_ADMIN_JWT_SIGNINGKEY", ""),
           }
 
           # Scan all yaml/yml files in dev directory
