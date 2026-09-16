@@ -1,3 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin-backend-config
+  namespace: saviaup-qa
+  labels:
+    app.kubernetes.io/name: admin-backend
+    app.kubernetes.io/part-of: saviaup
+    environment: qa
+data:
+  ASPNETCORE_ENVIRONMENT: "Staging"
+  ASPNETCORE_URLS: "http://+:8080"
+  Frontend__BaseUrl: "https://qa-admin.saviaup.com"
+  Jwt__Issuer: "https://qa-api-admin.saviaup.com"
+  Jwt__Audience: "https://qa-admin.saviaup.com"
+  Jwt__AccessTokenExpirationMinutes: "60"
+  Jwt__RefreshTokenExpirationDays: "7"
+  Cors__AllowedOrigins__0: "https://qa-admin.saviaup.com"
+  Email__Mode: "Development"
+  Logging__LogLevel__Default: "Information"
+  Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+  Logging__LogLevel__Microsoft.EntityFrameworkCore: "Warning"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -59,3 +82,24 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-backend
+  namespace: saviaup-qa
+  labels:
+    app.kubernetes.io/name: admin-backend
+    app.kubernetes.io/part-of: saviaup
+    environment: qa
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: admin-backend
+    app.kubernetes.io/part-of: saviaup
+    environment: qa
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

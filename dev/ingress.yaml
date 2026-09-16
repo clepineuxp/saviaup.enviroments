@@ -12,18 +12,14 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "25m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
         - dev.saviaup.com
-        - dev.api.saviaup.com
         - dev.admin.saviaup.com
-        - dev.api.admin.saviaup.com
-      secretName: saviaup-dev-tls
+      secretName: saviaup-tls
   rules:
-    # 1. Frontend Web (Restaurantes/Gastrobares)
     - host: dev.saviaup.com
       http:
         paths:
@@ -34,20 +30,6 @@ spec:
                 name: frontend
                 port:
                   number: 80
-
-    # 2. Backend API
-    - host: dev.api.saviaup.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: backend
-                port:
-                  number: 8080
-
-    # 3. Admin Frontend (Panel de Superadministrador)
     - host: dev.admin.saviaup.com
       http:
         paths:
@@ -58,13 +40,44 @@ spec:
                 name: admin-frontend
                 port:
                   number: 80
-
-    # 4. Admin Backend API
-    - host: dev.api.admin.saviaup.com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saviaup-api-ingress
+  namespace: saviaup-dev
+  labels:
+    app.kubernetes.io/part-of: saviaup
+    environment: dev
+  annotations:
+    ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - dev-api.saviaup.com
+        - dev-api-admin.saviaup.com
+      secretName: saviaup-tls
+  rules:
+    - host: dev-api.saviaup.com
       http:
         paths:
           - path: /
-            pathType: Prefix
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+    - host: dev-api-admin.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: admin-backend

@@ -4,22 +4,14 @@ kind: Kustomization
 namespace: saviaup-qa
 
 resources:
-  - backend/configmap.yaml
+  - backend/backend-manifest.yaml
   - backend/secret.yaml
-  - backend/deployment.yaml
-  - backend/service.yaml
-  - frontend/configmap.yaml
+  - frontend/frontend-manifest.yaml
   - frontend/secret.yaml
-  - frontend/deployment.yaml
-  - frontend/service.yaml
-  - admin-backend/configmap.yaml
+  - admin-backend/admin-backend-manifest.yaml
   - admin-backend/secret.yaml
-  - admin-backend/deployment.yaml
-  - admin-backend/service.yaml
-  - admin-frontend/configmap.yaml
+  - admin-frontend/admin-frontend-manifest.yaml
   - admin-frontend/secret.yaml
-  - admin-frontend/deployment.yaml
-  - admin-frontend/service.yaml
   - ingress.yaml
   - ghcr-secret.yaml
 

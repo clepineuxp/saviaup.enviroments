@@ -12,18 +12,14 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "25m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
         - qa.saviaup.com
-        - qa.api.saviaup.com
         - qa.admin.saviaup.com
-        - qa.api.admin.saviaup.com
-      secretName: saviaup-qa-tls
+      secretName: saviaup-tls
   rules:
-    # 1. Frontend Web QA
     - host: qa.saviaup.com
       http:
         paths:
@@ -34,20 +30,6 @@ spec:
                 name: frontend
                 port:
                   number: 80
-
-    # 2. Backend API QA
-    - host: qa.api.saviaup.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: backend
-                port:
-                  number: 8080
-
-    # 3. Admin Frontend QA
     - host: qa.admin.saviaup.com
       http:
         paths:
@@ -58,13 +40,44 @@ spec:
                 name: admin-frontend
                 port:
                   number: 80
-
-    # 4. Admin Backend API QA
-    - host: qa.api.admin.saviaup.com
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saviaup-api-ingress
+  namespace: saviaup-qa
+  labels:
+    app.kubernetes.io/part-of: saviaup
+    environment: qa
+  annotations:
+    ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - qa-api.saviaup.com
+        - qa-api-admin.saviaup.com
+      secretName: saviaup-tls
+  rules:
+    - host: qa-api.saviaup.com
       http:
         paths:
           - path: /
-            pathType: Prefix
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+    - host: qa-api-admin.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: admin-backend

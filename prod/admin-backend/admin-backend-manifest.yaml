@@ -1,3 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin-backend-config
+  namespace: saviaup-prod
+  labels:
+    app.kubernetes.io/name: admin-backend
+    app.kubernetes.io/part-of: saviaup
+    environment: prod
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"
+  Frontend__BaseUrl: "https://admin.saviaup.com"
+  Jwt__Issuer: "https://admin-api.saviaup.com"
+  Jwt__Audience: "https://admin.saviaup.com"
+  Jwt__AccessTokenExpirationMinutes: "30"
+  Jwt__RefreshTokenExpirationDays: "7"
+  Cors__AllowedOrigins__0: "https://admin.saviaup.com"
+  Email__Mode: "Development"
+  Logging__LogLevel__Default: "Warning"
+  Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+  Logging__LogLevel__Microsoft.EntityFrameworkCore: "Warning"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -64,3 +87,24 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-backend
+  namespace: saviaup-prod
+  labels:
+    app.kubernetes.io/name: admin-backend
+    app.kubernetes.io/part-of: saviaup
+    environment: prod
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: admin-backend
+    app.kubernetes.io/part-of: saviaup
+    environment: prod
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
