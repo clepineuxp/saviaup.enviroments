@@ -14,6 +14,7 @@ jobs:
   export-to-server:
     name: Export QA Manifests to Remote Server
     runs-on: ubuntu-latest
+    environment: saviaup
 
     steps:
       - name: 1. Checkout Repository
