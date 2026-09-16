@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-frontend
+  namespace: saviaup-dev
+  labels:
+    app.kubernetes.io/name: admin-frontend
+    app.kubernetes.io/part-of: saviaup
+    environment: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: admin-frontend
+      app.kubernetes.io/part-of: saviaup
+      environment: dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: admin-frontend
+        app.kubernetes.io/part-of: saviaup
+        environment: dev
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: admin-frontend
+          image: ghcr.io/clepineuxp/saviaup-frontend-admin:dev
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: admin-frontend-config
+            - secretRef:
+                name: admin-frontend-secret
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2

@@ -1,0 +1,85 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saviaup-ingress
+  namespace: saviaup-prod
+  labels:
+    app.kubernetes.io/part-of: saviaup
+    environment: prod
+  annotations:
+    ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - saviaup.com
+        - www.saviaup.com
+        - api.saviaup.com
+        - admin.saviaup.com
+        - api.admin.saviaup.com
+      secretName: saviaup-prod-tls
+  rules:
+    # 1. Frontend Web Producción
+    - host: saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+
+    # 1.1 Frontend Web www
+    - host: www.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+
+    # 2. Backend API Producción
+    - host: api.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+
+    # 3. Admin Frontend Producción
+    - host: admin.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-frontend
+                port:
+                  number: 80
+
+    # 4. Admin Backend API Producción
+    - host: api.admin.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-backend
+                port:
+                  number: 8080
