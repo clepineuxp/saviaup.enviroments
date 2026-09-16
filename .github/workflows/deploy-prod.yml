@@ -1,0 +1,111 @@
+name: Export Production Manifests via SSH
+
+on:
+  push:
+    branches:
+      - main
+      - prod
+    paths:
+      - 'prod/**'
+      - '.github/workflows/deploy-prod.yml'
+  workflow_dispatch:
+
+jobs:
+  export-to-server:
+    name: Export Production Manifests to Remote Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Set up Python for Variable Substitution
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 3. Replace ${{...}} Placeholders in prod/ Manifests
+        env:
+          PROD_PLATFORMDATABASE_CONNECTIONSTRING: ${{ secrets.PROD_PLATFORMDATABASE_CONNECTIONSTRING }}
+          PROD_APPLICATIONDATABASE_CONNECTIONSTRING: ${{ secrets.PROD_APPLICATIONDATABASE_CONNECTIONSTRING }}
+          PROD_ADMINDATABASE_CONNECTIONSTRING: ${{ secrets.PROD_ADMINDATABASE_CONNECTIONSTRING }}
+          PROD_JWT_SIGNINGKEY: ${{ secrets.PROD_JWT_SIGNINGKEY }}
+          PROD_ADMIN_JWT_SIGNINGKEY: ${{ secrets.PROD_ADMIN_JWT_SIGNINGKEY }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - << 'EOF'
+          import os, base64
+
+          replacements = {
+              "${{Prod_PlatformDatabase__ConnectionString}}": os.environ.get("PROD_PLATFORMDATABASE_CONNECTIONSTRING", ""),
+              "${{Prod_ApplicationDatabase__ConnectionString}}": os.environ.get("PROD_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
+              "${{Prod_AdminDatabase__ConnectionString}}": os.environ.get("PROD_ADMINDATABASE_CONNECTIONSTRING", ""),
+              "${{Prod_Jwt__SigningKey}}": os.environ.get("PROD_JWT_SIGNINGKEY", ""),
+              "${{Prod_Admin_Jwt__SigningKey}}": os.environ.get("PROD_ADMIN_JWT_SIGNINGKEY", ""),
+          }
+
+          # Scan all yaml/yml files in prod directory
+          for root, dirs, files in os.walk("prod"):
+              for file in files:
+                  if file.endswith((".yaml", ".yml")):
+                      filepath = os.path.join(root, file)
+                      with open(filepath, "r", encoding="utf-8") as f:
+                          content = f.read()
+
+                      modified = content
+                      for placeholder, value in replacements.items():
+                          if value and placeholder in modified:
+                              modified = modified.replace(placeholder, value)
+                              print(f"Replaced {placeholder} in {filepath}")
+
+                      # Also substitute ghcr credentials if available
+                      ghcr_user = os.environ.get("GHCR_USERNAME")
+                      ghcr_token = os.environ.get("GHCR_TOKEN")
+                      if ghcr_user and ghcr_token and file == "ghcr-secret.yaml":
+                          auth_b64 = base64.b64encode(f"{ghcr_user}:{ghcr_token}".encode("utf-8")).decode("utf-8")
+                          modified = modified.replace("CHANGE_ME_GITHUB_USER", ghcr_user)
+                          modified = modified.replace("CHANGE_ME_GITHUB_PAT", ghcr_token)
+                          modified = modified.replace("CHANGE_ME", auth_b64)
+                          print(f"Injected GHCR credentials in {filepath}")
+
+                      if modified != content:
+                          with open(filepath, "w", encoding="utf-8") as f:
+                              f.write(modified)
+          EOF
+
+      - name: 4. Ensure Target Directory on Remote Server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            mkdir -p /opt/saviaup/deploys/prod
+
+      - name: 5. Copy Manifests to /opt/saviaup/deploys/prod via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "prod/*"
+          target: "/opt/saviaup/deploys/prod"
+          strip_components: 1
+          overwrite: true
+
+      - name: 6. Verify Files on Remote Server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            echo "Manifests successfully exported to /opt/saviaup/deploys/prod:"
+            ls -la /opt/saviaup/deploys/prod
