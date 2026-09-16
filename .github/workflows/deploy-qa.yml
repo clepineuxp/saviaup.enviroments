@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - qa
-      - main
     paths:
       - 'qa/**'
       - '.github/workflows/deploy-qa.yml'
@@ -25,7 +24,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: 3. Replace ${{...}} Placeholders in qa/ Manifests
+      - name: 3. Replace Environment Placeholders in qa/ Manifests
         env:
           QA_PLATFORMDATABASE_CONNECTIONSTRING: ${{ vars.QA_PLATFORMDATABASE_CONNECTIONSTRING }}
           QA_APPLICATIONDATABASE_CONNECTIONSTRING: ${{ vars.QA_APPLICATIONDATABASE_CONNECTIONSTRING }}
@@ -38,12 +37,15 @@ jobs:
           python3 - << 'EOF'
           import os, base64
 
+          P = "${" + "{"
+          S = "}}"
+
           replacements = {
-              "${{Qa_PlatformDatabase__ConnectionString}}": os.environ.get("QA_PLATFORMDATABASE_CONNECTIONSTRING", ""),
-              "${{Qa_ApplicationDatabase__ConnectionString}}": os.environ.get("QA_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
-              "${{Qa_AdminDatabase__ConnectionString}}": os.environ.get("QA_ADMINDATABASE_CONNECTIONSTRING", ""),
-              "${{Qa_Jwt__SigningKey}}": os.environ.get("QA_JWT_SIGNINGKEY", ""),
-              "${{Qa_Admin_Jwt__SigningKey}}": os.environ.get("QA_ADMIN_JWT_SIGNINGKEY", ""),
+              f"{P}Qa_PlatformDatabase__ConnectionString{S}": os.environ.get("QA_PLATFORMDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Qa_ApplicationDatabase__ConnectionString{S}": os.environ.get("QA_APPLICATIONDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Qa_AdminDatabase__ConnectionString{S}": os.environ.get("QA_ADMINDATABASE_CONNECTIONSTRING", ""),
+              f"{P}Qa_Jwt__SigningKey{S}": os.environ.get("QA_JWT_SIGNINGKEY", ""),
+              f"{P}Qa_Admin_Jwt__SigningKey{S}": os.environ.get("QA_ADMIN_JWT_SIGNINGKEY", ""),
           }
 
           # Scan all yaml/yml files in qa directory
@@ -80,8 +82,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          password: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             mkdir -p /opt/saviaup/deploys/qa
@@ -91,8 +92,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          password: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           source: "qa/*"
           target: "/opt/saviaup/deploys/qa"
@@ -104,8 +104,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          password: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             echo "Manifests successfully exported to /opt/saviaup/deploys/qa:"
