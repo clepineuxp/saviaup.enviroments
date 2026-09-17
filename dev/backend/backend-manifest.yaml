@@ -17,6 +17,7 @@ data:
   Jwt__RefreshTokenExpirationDays: "7"
   Cors__AllowedOrigins__0: "https://dev.saviaup.com"
   Email__Mode: "Development"
+  AdminApi__BaseUrl: "http://admin-backend:8080"
   Logging__LogLevel__Default: "Information"
   Logging__LogLevel__Microsoft.AspNetCore: "Warning"
   Logging__LogLevel__Microsoft.EntityFrameworkCore: "Warning"
