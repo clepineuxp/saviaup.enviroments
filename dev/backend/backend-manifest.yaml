@@ -11,6 +11,7 @@ data:
   ASPNETCORE_ENVIRONMENT: "Development"
   ASPNETCORE_URLS: "http://+:8080"
   Frontend__BaseUrl: "https://dev.saviaup.com"
+  Printing__AgentDownloadUrl: "https://dev-downloads.saviaup.com/SaviaUpPrintAgent-Setup.exe"
   Jwt__Issuer: "https://dev-api.saviaup.com"
   Jwt__Audience: "https://dev.saviaup.com"
   Jwt__AccessTokenExpirationMinutes: "60"
