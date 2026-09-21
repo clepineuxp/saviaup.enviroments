@@ -12,6 +12,7 @@ resources:
   - admin-backend/secret.yaml
   - admin-frontend/admin-frontend-manifest.yaml
   - admin-frontend/secret.yaml
+  - downloads/print-agent-downloads.yaml
   - ingress.yaml
   - ghcr-secret.yaml
 

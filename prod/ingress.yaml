@@ -94,3 +94,32 @@ spec:
                 name: admin-backend
                 port:
                   number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: print-agent-downloads-ingress
+  namespace: saviaup-prod
+  labels:
+    app.kubernetes.io/part-of: saviaup
+    environment: prod
+  annotations:
+    ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - downloads.saviaup.com
+      secretName: saviaup-tls
+  rules:
+    - host: downloads.saviaup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: print-agent-downloads
+                port:
+                  number: 80
