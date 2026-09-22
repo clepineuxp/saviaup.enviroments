@@ -17,6 +17,7 @@ data:
   Jwt__AccessTokenExpirationMinutes: "60"
   Jwt__RefreshTokenExpirationDays: "7"
   Cors__AllowedOrigins__0: "https://qa.saviaup.com"
+  Cors__AllowedOrigins__1: "https://qa-menu.saviaup.com"
   Email__Mode: "Development"
   AdminApi__BaseUrl: "http://admin-backend:8080"
   Logging__LogLevel__Default: "Information"

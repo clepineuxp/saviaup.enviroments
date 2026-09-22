@@ -10,6 +10,7 @@ metadata:
 data:
   API_URL: "https://dev-api.saviaup.com"
   SIGNALR_URL: "https://dev-api.saviaup.com/hubs"
+  MENU_FRONTEND_URL: "https://dev-menu.saviaup.com"
 ---
 apiVersion: apps/v1
 kind: Deployment
