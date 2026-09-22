@@ -1,24 +1,22 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: frontend-config
+  name: frontend-menu-config
   namespace: saviaup-prod
   labels:
-    app.kubernetes.io/name: frontend
+    app.kubernetes.io/name: frontend-menu
     app.kubernetes.io/part-of: saviaup
     environment: prod
 data:
   API_URL: "https://api.saviaup.com"
-  SIGNALR_URL: "https://api.saviaup.com/hubs"
-  MENU_FRONTEND_URL: "https://menu.saviaup.com"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: frontend-menu
   namespace: saviaup-prod
   labels:
-    app.kubernetes.io/name: frontend
+    app.kubernetes.io/name: frontend-menu
     app.kubernetes.io/part-of: saviaup
     environment: prod
 spec:
@@ -30,21 +28,21 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app.kubernetes.io/name: frontend
+      app.kubernetes.io/name: frontend-menu
       app.kubernetes.io/part-of: saviaup
       environment: prod
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: frontend
+        app.kubernetes.io/name: frontend-menu
         app.kubernetes.io/part-of: saviaup
         environment: prod
     spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - name: frontend
-          image: ghcr.io/clepineuxp/saviaup-frontend:latest
+        - name: frontend-menu
+          image: ghcr.io/clepineuxp/saviaup-frontend-menu:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -52,9 +50,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: frontend-config
+                name: frontend-menu-config
             - secretRef:
-                name: frontend-secret
+                name: frontend-menu-secret
           resources:
             requests:
               cpu: 100m
@@ -82,16 +80,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend
+  name: frontend-menu
   namespace: saviaup-prod
   labels:
-    app.kubernetes.io/name: frontend
+    app.kubernetes.io/name: frontend-menu
     app.kubernetes.io/part-of: saviaup
     environment: prod
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: frontend
+    app.kubernetes.io/name: frontend-menu
     app.kubernetes.io/part-of: saviaup
     environment: prod
   ports:
