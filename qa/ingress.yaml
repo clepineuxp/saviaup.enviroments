@@ -152,8 +152,6 @@ metadata:
     environment: qa
   annotations:
     ingress.class: nginx
-    nginx.ingress.kubernetes.io/permanent-redirect: "https://qa-menu.saviaup.com$request_uri"
-    nginx.ingress.kubernetes.io/permanent-redirect-code: "308"
 spec:
   ingressClassName: nginx
   tls:
@@ -168,6 +166,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: frontend-menu
+                name: legacy-menu-redirect
                 port:
                   number: 80
