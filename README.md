@@ -142,3 +142,9 @@ kubectl get svc -n saviaup-dev
 # Ver ingress
 kubectl get ingress -n saviaup-dev
 ```
+
+## Afinidad y descubrimiento de agentes de impresión
+
+El backend de producción conserva dos réplicas. El descubrimiento pendiente de agentes se comparte mediante PostgreSQL y no depende de memoria local. El ingress de API usa afinidad por cookie para mantener estables las conexiones SignalR operativas, mientras que el registro y polling de vinculación pueden cambiar de réplica sin perder estado.
+
+Los manifiestos declaran las redes privadas del clúster en `ReverseProxy__KnownNetworks__*`. ASP.NET Core solo procesa `X-Forwarded-For` cuando la conexión proviene de esas redes confiables; no se deben volver a limpiar las listas de proxies conocidos ni aceptar cabeceras de origen directamente desde Internet. Si cambia el CIDR de pods o del ingress, actualiza estos valores antes del despliegue.
