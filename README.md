@@ -54,6 +54,7 @@ saviaup.environments/
 │   ├── frontend/                        # ConfigMap, Secret, Deployment, Service
 │   ├── admin-backend/                   # ConfigMap, Secret, Deployment, Service
 │   ├── admin-frontend/                  # ConfigMap, Secret, Deployment, Service
+│   ├── media/                           # PVC, Nginx de archivos y Service
 │   ├── ingress.yaml                     # Reglas de enrutamiento y TLS para dev.*
 │   ├── ghcr-secret.yaml                 # Plantilla del secret de pull de imágenes
 │   └── kustomization.yaml               # Manifiesto Kustomize
@@ -148,3 +149,21 @@ kubectl get ingress -n saviaup-dev
 El backend de producción conserva dos réplicas. El descubrimiento pendiente de agentes se comparte mediante PostgreSQL y no depende de memoria local. El ingress de API usa afinidad por cookie para mantener estables las conexiones SignalR operativas, mientras que el registro y polling de vinculación pueden cambiar de réplica sin perder estado.
 
 Los manifiestos declaran las redes privadas del clúster en `ReverseProxy__KnownNetworks__*`. ASP.NET Core solo procesa `X-Forwarded-For` cuando la conexión proviene de esas redes confiables; no se deben volver a limpiar las listas de proxies conocidos ni aceptar cabeceras de origen directamente desde Internet. Si cambia el CIDR de pods o del ingress, actualiza estos valores antes del despliegue.
+
+## Almacenamiento de imágenes en PVC
+
+Cada ambiente crea su propio claim `media-storage` con la clase `local-path`: 5 GiB en dev, 10 GiB en QA y 50 GiB en producción. El backend lo monta con escritura en `/var/lib/saviaup/files`; el deployment `media-server` monta el mismo volumen en modo lectura y sirve las referencias WebP bajo `/pvc/{tenant}/...`.
+
+El ingress publica `/pvc` tanto en el host web principal como en el host administrativo. Nginx admite únicamente `GET` y `HEAD` y responde con caché pública inmutable de un año; las referencias cambian cuando se reemplaza una imagen, evitando invalidaciones manuales.
+
+`local-path` y `ReadWriteOnce` son apropiados para un k3s de un solo nodo. Antes de distribuir réplicas entre varios nodos se debe cambiar el claim a una clase con `ReadWriteMany` (por ejemplo Longhorn/NFS) o implementar otro adaptador de `IFileStorage`, como S3. El PVC no sustituye una política de backup: debe incluirse el volumen de cada ambiente en las copias de seguridad.
+
+Comprobaciones útiles:
+
+```bash
+kubectl get pvc media-storage -n saviaup-dev
+kubectl get pods -n saviaup-dev -l app.kubernetes.io/name=media-server
+curl -I https://dev.saviaup.com/pvc/<tenant>/<ruta>.webp
+```
+
+El workflow de despliegue del backend ejecuta `kubectl apply` sobre `media/media-storage.yaml` antes del rollout. Esta operación es idempotente: crea el PVC y `media-server` cuando no existen, reconcilia cambios cuando existen y espera que el claim quede `Bound` antes de reiniciar el backend.

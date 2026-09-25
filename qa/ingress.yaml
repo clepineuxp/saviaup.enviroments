@@ -23,6 +23,13 @@ spec:
     - host: qa.saviaup.com
       http:
         paths:
+          - path: /pvc
+            pathType: Prefix
+            backend:
+              service:
+                name: media-server
+                port:
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:
@@ -33,6 +40,13 @@ spec:
     - host: qa.admin.saviaup.com
       http:
         paths:
+          - path: /pvc
+            pathType: Prefix
+            backend:
+              service:
+                name: media-server
+                port:
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:

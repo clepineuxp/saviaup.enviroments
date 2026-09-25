@@ -6,6 +6,7 @@ namespace: saviaup-qa
 resources:
   - backend/backend-manifest.yaml
   - backend/secret.yaml
+  - media/media-storage.yaml
   - frontend/frontend-manifest.yaml
   - frontend/secret.yaml
   - frontend-menu/frontend-menu-manifest.yaml
