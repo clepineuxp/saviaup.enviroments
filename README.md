@@ -165,3 +165,5 @@ kubectl get pvc media-storage -n saviaup-dev
 kubectl get pods -n saviaup-dev -l app.kubernetes.io/name=media-server
 curl -I https://dev.saviaup.com/pvc/<tenant>/<ruta>.webp
 ```
+
+El workflow de despliegue del backend ejecuta `kubectl apply` sobre `media/media-storage.yaml` antes del rollout. Esta operación es idempotente: crea el PVC y `media-server` cuando no existen, reconcilia cambios cuando existen y espera que el claim quede `Bound` antes de reiniciar el backend.
